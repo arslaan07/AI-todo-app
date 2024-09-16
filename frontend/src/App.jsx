@@ -126,7 +126,7 @@ function App() {
     }
   return (
     <div className='  min-h-screen shiny-background w-full '> 
-      <div className='my-5 flex justify-between gap-20'>
+      <div className=' flex justify-between gap-20'>
     
       <div className=' h-[50vh]'>
       <h1 className='text-6xl w-full p-8 text-white font-extrabold tracking-wide'>AI Todo App</h1>
@@ -163,7 +163,7 @@ function App() {
       </div>
       </div>
 
-      <div style={{ marginLeft: '10px' }} className=' mt-5 p-2 text-2xl text-white font-semibold '>
+      <div style={{ marginLeft: '10px' }} className=' mt-8 p-2 text-2xl text-white font-semibold '>
         {!isEditting? 
          (tasksToDisplay.length === 0  && tasksToDisplay.length === submittedTodos.length? "No Tasks Added Yet" :
         showCompleted ? <a className='cursor-pointer' onClick={handleShowAllTasks} >Show All Task</a> : 
