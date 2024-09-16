@@ -126,7 +126,7 @@ function App() {
     }
   return (
     <div className='  min-h-screen shiny-background w-full '> 
-      <div className='flex justify-between gap-20'>
+      <div className='my-5 flex justify-between gap-20'>
     
       <div className=' h-[50vh]'>
       <h1 className='text-6xl w-full p-8 text-white font-extrabold tracking-wide'>AI Todo App</h1>
@@ -182,8 +182,8 @@ function App() {
             <h1 className='text-xl text-white font-semibold'> <input className='w-4 h-4 mr-2 accent-black' type="checkbox" checked={t.completed}
             onChange={() => handleCheckboxChange(i)} /> {t.text}</h1>
             <div className='links'>
-              <a onClick={() => handleEdit(i)} className='mr-2 text-zinc-300 font-semibold' href='#'>Edit</a>
-              <a onClick={() => handleDelete(i)} className='text-zinc-300 font-semibold' href='#'>Delete</a>
+              <a onClick={() => handleEdit(i)} className='mr-2 text-zinc-300 font-semibold text-sm' href='#'>Edit</a>
+              <a onClick={() => handleDelete(i)} className='text-zinc-300 font-semibold text-sm' href='#'>Delete</a>
             </div>
         </div>
       </div>
