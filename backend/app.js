@@ -1,52 +1,67 @@
-const express = require('express')
-const app = express()
+require('dotenv').config()
+const express = require('express');
+const app = express();
+const cors = require('cors');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-const axios = require('axios')
-const cors = require('cors')
+app.use(cors());
+app.use(express.json());
 
-app.use(cors())
-app.use(express.json())
+const apiKey = process.env.GEMINI_API_KEY;
+const genAI = new GoogleGenerativeAI(apiKey);
 
-const OPEN_AI_KEY = process.env.OPEN_AI_KEY
+const model = genAI.getGenerativeModel({
+  model: "gemini-1.5-flash",
+});
 
-app.post('/suggest-task', async(req, res) => {
-    const { taskHistory } = req.body
-    console.log({ taskHistory });
-    try {
-        const response = await axios.post(
-            'https://api.openai.com/v1/completions',
-            {
-            model: "gpt-3.5",
-            messages: [
-                {
-                role: 'system',
-                content: "You are an AI that suggests tasks based on the user's previous task history."
-            },
-            {
-                role: "user",
-                content: `Here are the tasks I've completed: ${taskHistory}. Can you suggest a new task?`
-            }
-            ],
-            max_tokens: 100,
-        },
-        {
-            headers: {
-                'Authorization': `Bearer ${OPEN_AI_KEY}`,
-                'Content-Type': 'application/json',
-            },
-        }
-        )
-        const suggestion = response.data.choices[0].message_content
-        res.json({suggestion})
-    } catch (error) {
-        console.error(error)
-        res.status(500).json({error: 'Error generating task suggestion'})
+const generationConfig = {
+  temperature: 1,
+  topP: 0.95,
+  topK: 64,
+  maxOutputTokens: 8192,
+  responseMimeType: "application/json",
+};
+
+async function suggestTask(taskHistory) {
+  const chatSession = model.startChat({
+    generationConfig,
+    history: [
+      {
+        role: "user",
+        parts: [{ text: "You are an AI that suggests tasks based on the user's previous task history\n" }],
+      },
+      {
+        role: "model",
+        parts: [{ text: "Understood. I'm ready to suggest tasks based on the user's history." }],
+      },
+    ],
+  });
+
+  const result = await chatSession.sendMessage(`Here are the tasks I've completed: ${taskHistory}. Can you suggest three new task in an object tasks?`);
+  return result.response.text();
+}
+
+app.post("/suggest-task", async (req, res) => {
+  try {
+    const { taskHistory } = req.body;
+    if (!taskHistory) {
+      return res.status(400).json({ error: "Task history is required" });
     }
-})
+    const suggestion = await suggestTask(taskHistory);
+    
+    res.json({ suggestion });
+  } catch (error) {
+    console.error("Error suggesting task:", error);
+    res.status(500).json({ error: "An error occurred while suggesting a task" });
+  }
+});
+
 app.get("/", (req, res) => {
-    res.send("hello")
-    console.log('Starting server ...')
-})
-app.listen(3000, () => {
-    console.log('Server is running on port 3000')
-})
+  res.send("hello");
+  console.log('Server is running');
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});

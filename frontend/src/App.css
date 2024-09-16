@@ -9,3 +9,8 @@
     backdrop-filter: blur(10px);
     box-shadow: 0 0 20px rgba(255, 255, 255, 0.1) inset;
   }
+
+  input::placeholder {
+    color: black; /* Change this to any color you want */
+    opacity: 0.6; /* Adjust opacity if needed */
+  }

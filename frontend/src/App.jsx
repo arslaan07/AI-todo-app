@@ -10,10 +10,11 @@ function App() {
   const [submittedTodos, setSubmittedTodos] = useState([])
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isEditting, setIsEditting] = useState(false)
-  const [isEditted, setIsEditted] = useState(false)
   const [editIndex, setEditIndex] = useState(null)
   const [showCompleted, setShowCompleted] = useState(false) 
-  const [suggestedTask, setSuggestedTask] = useState('')
+  const [suggestedTasks, setSuggestedTasks] = useState('')
+  const [isLoadingSuggestion, setIsLoadingSuggestion] = useState(false)
+  const [taskSuggested, setTaskSuggested] = useState(false)
   const handleChange = (e) => {
     setTodo(e.target.value)
   }
@@ -30,6 +31,10 @@ function App() {
     }
   }, [])
   useEffect(() => {
+    if(submittedTodos.length === 0) {
+      localStorage.removeItem('submittedTodos')
+      setSuggestedTasks('')
+    }
     if(submittedTodos.length > 0)
     localStorage.setItem('submittedTodos', JSON.stringify(submittedTodos))
   }, [submittedTodos])
@@ -61,6 +66,8 @@ function App() {
   const handleDelete = (indexToBeDeleted) => {
     const updatedTodos = submittedTodos.filter((t, i) => i !== indexToBeDeleted)
     setSubmittedTodos(updatedTodos)
+
+    
   }
   const handleEdit = (indexToBeEdited) => {
     setIsEditting(true)
@@ -86,44 +93,77 @@ function App() {
   const tasksToDisplay = showCompleted ? 
     submittedTodos.filter((t, i) => t.completed) : submittedTodos
 
-  const getSuggestedTask = async () => {
-    try {
-      const response = await fetch('http://localhost:3000/suggest-task', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          taskHistory: submittedTodos.map(t => t.text).join(','),
-        })
-      })
-      console.log(response.data)
-      const data = await response.json()
-      setSuggestedTask(data.suggestion)
-    } catch (error) {
-      console.error('Error fetching suggestion: ', error)
+    const getSuggestedTask = async () => {
+      setIsLoadingSuggestion(true)
+      try {
+        const response = await fetch('http://localhost:3000/suggest-task', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            taskHistory: submittedTodos.map(t => t.text).join(', '),
+          })
+        });
+        const data = await response.json();
+        if (data.suggestion) {
+          const parsedSuggestion = JSON.parse(data.suggestion);
+          setSuggestedTasks(parsedSuggestion.tasks || []);
+        }
+      } catch (error) {
+        console.error('Error fetching suggestion: ', error);
+      } finally {
+        setIsLoadingSuggestion(false)
+        setTaskSuggested(true)
+      }
+    };
+    const addSuggestedTask = (i) => {
+      setSubmittedTodos((prevTodos) => [
+        ...prevTodos,
+        {text: suggestedTasks[i], completed: false}
+      ])
+      console.log(suggestedTasks[i])
     }
-  }
   return (
-    <div className='flex gap-40 min-h-screen shiny-background'> 
-      
-    <div className=''>
-      <div className='border-2'>
+    <div className='  min-h-screen shiny-background w-full '> 
+      <div className='flex justify-between gap-20'>
+    
+      <div className=' h-[50vh]'>
       <h1 className='text-6xl w-full p-8 text-white font-extrabold tracking-wide'>AI Todo App</h1>
       <div className=' flex flex-col'>
         <h1 style={{ marginLeft: '20px' }} className='text-2xl  text-white p-2 font-medium'>{isEditting? "Update Todo" : "Add a Todo"}</h1>
         <form action="" onSubmit={handleSubmit}>
-        <input style={{height: '15vh', width: '50vw', marginLeft: '20px' }} className='bg-zinc-200 border outline-none border-zinc-300 p-2 m-3 border-2 rounded-md text-xl' 
+        <input style={{height: '15vh', width: '50vw', marginLeft: '20px' }} className='font-semibold bg-zinc-200 border outline-none border-zinc-300 p-2 m-3 border-2 rounded-md text-xl' 
         type="text"
         name='name'
         value={todo} 
+        placeholder='Start giving me your cluttered thoughts, I will take care of everything'
         onChange={handleChange}/>
         <br/>
         <button style={{ marginLeft: '20px' }} className='m-3 bg-black text-white p-2 rounded-md font-medium  w-32 h-10 '>{isEditting ? "Update Task": "Add Task"}</button>
         </form>
         </div>
+        </div>
+
+        <div className=' h-[50vh] w-full'>
+        <h1 style={{padding: '8px'}} className='p-2 text-3xl my-10 text-white font-extrabold tracking-wide'>AI Task Suggesstions</h1>
+        {submittedTodos.length > 0 && suggestedTasks.length > 0 && (
+  <div className=''>
+    {suggestedTasks.map((task, index) => (
+      <div key={index} className='flex justify-between border-2 border-zinc-300 rounded-md m-2'>
+      <h1  className=' p-3 text-xl text-white font-semibold'>{task}</h1>
+      <button onClick={() => addSuggestedTask(index)} className='m-3 bg-black text-white p-2 rounded-md font-medium w-32 h-10 '>Add Task</button>
       </div>
-      <div style={{ marginLeft: '10px' }} className=' mt-5 p-2 flex text-2xl text-white font-semibold '>
+    ))}
+  </div>
+)}
+        {submittedTodos.length > 0 ? 
+        <button onClick={getSuggestedTask} style={{ marginLeft: '2px' }} className='m-1 bg-black text-white p-2 rounded-md font-medium  w-32 h-10 '>{isLoadingSuggestion ? "Loading..." : taskSuggested ? "Suggest More" : "Suggest Task"}</button>
+        : (<div style={{paddingLeft: '2px'}} className='text-xl text-white '>Add a task first</div>) }
+      </div>
+      </div>
+
+      <div style={{ marginLeft: '10px' }} className=' mt-5 p-2 text-2xl text-white font-semibold '>
         {!isEditting? 
          (tasksToDisplay.length === 0  && tasksToDisplay.length === submittedTodos.length? "No Tasks Added Yet" :
         showCompleted ? <a className='cursor-pointer' onClick={handleShowAllTasks} >Show All Task</a> : 
@@ -132,11 +172,11 @@ function App() {
       }
       </div>
       {!isEditting ?
-      <div style={{ marginLeft: '10px' }} className='mb-10 w-full border-2'>
+      <div style={{  }} className='flex flex-wrap justify-evenly gap-4 w-full p-4'>
       {tasksToDisplay.length > 0 ? 
        
         tasksToDisplay.map((t, i) => {
-          return <div key={i} className='mt-2 flex flex-col p-2'>
+          return <div key={i} className=''>
             <div style={{width: '40vw'}} className='card  flex border-2 border-zinc-300 rounded-md mt-2 p-3 justify-between' >
             
             <h1 className='text-xl text-white font-semibold'> <input className='w-4 h-4 mr-2 accent-black' type="checkbox" checked={t.completed}
@@ -151,19 +191,8 @@ function App() {
       }
       </div> : "" }
     </div>
-    <div className='border-2 h-[50vh]'>
-        <h1 style={{padding: '8', paddingLeft: '0'}} className='text-3xl my-10 w-full text-white font-extrabold tracking-wide'>AI Task Suggesstions</h1>
-        {/* <div style={{width: '30vw'}} className='card  flex flex-col border-2 border-zinc-300 rounded-md mt-2 p-3 justify-between' >
-        <h1 className='text-xl text-white font-semibold'> First AI suggesstion</h1>
-        </div> */}
-        {suggestedTask && 
-          <div>
-            <p>{suggestedTask}</p>
-          </div>
-        }
-        <button onClick={getSuggestedTask} style={{ marginLeft: '2px' }} className='m-3 bg-black text-white p-2 rounded-md font-medium  w-32 h-10 '>Suggest Task</button>
-      </div>
-    </div>
+    
+    
   )
 }
 
