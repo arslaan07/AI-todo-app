@@ -96,7 +96,7 @@ function App() {
     const getSuggestedTask = async () => {
       setIsLoadingSuggestion(true)
       try {
-        const response = await fetch('http://localhost:3000/suggest-task', {
+        const response = await fetch('https://ai-todo-app-api.vercel.app/suggest-task', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
