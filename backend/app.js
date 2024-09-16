@@ -5,7 +5,7 @@ const cors = require('cors');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 app.use(cors({
-  origin: ["https://ai-todo-app-frontend.vercel.app/"],
+  origin: ["https://ai-todo-app-frontend.vercel.app"],
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true
 }));
