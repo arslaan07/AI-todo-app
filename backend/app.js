@@ -4,7 +4,11 @@ const app = express();
 const cors = require('cors');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-app.use(cors());
+app.use(cors({
+  origin: ["https://ai-todo-app-frontend.vercel.app/"],
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true
+}));
 app.use(express.json());
 
 const apiKey = process.env.GEMINI_API_KEY;
