@@ -175,7 +175,7 @@ function App() {
       <div style={{  }} className='flex flex-wrap justify-evenly gap-4 w-full p-4'>
       {tasksToDisplay.length > 0 ? 
        
-       [...tasksToDisplay].reverse().map((t, i) => {
+       tasksToDisplay.reverse().map((t, i) => {
           return <div key={i} className=''>
             <div style={{width: '40vw'}} className='card  flex border-2 border-zinc-300 rounded-md mt-2 p-3 justify-between' >
             
